@@ -6,6 +6,7 @@
   <title>Floating Bottom Nav</title>
   <link rel="stylesheet" href="styles.css" />
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="nav-bar/bar-script.js"></script>
 </head>
 <body>
 
@@ -19,7 +20,7 @@
     </div>
 
 
-    <div class="color-grid">
+    <div class="color-grid" id="dashboard-content">
         <div class="top-block"></div>
         <div class="color-box" style="background-color: #fde2cf;"></div>
         <div class="color-box" style="background-color: #e4deff;"></div>
@@ -27,15 +28,29 @@
         <div class="color-box" style="background-color: #fa5c5c;"></div>
     </div>
 
-  <div class="bottom-nav">
-    <div class="nav-item active"><i data-lucide="home"></i></div>
-    <div class="nav-item"><i data-lucide="message-square-text"></i></div>
-    <div class="nav-item"><i data-lucide="calendar"></i></div>
-    <div class="nav-item"><i data-lucide="users"></i></div>
-    <div class="nav-item"><i data-lucide="list-todo"></i></div>
-  </div>
+    <div id="nav-bar-container"></div>
 
-  <script src="script.js"></script>
+    <script language="javascript">
+    fetch('nav-bar/bar.html')
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('nav-bar-container').innerHTML = html;
+            lucide.createIcons();
+            bar_init();
+            
+            const dashboard = document.getElementById('dashboard-content');
+
+            // Listen for nav-change event
+            window.addEventListener('nav-change', (e) => {
+                const index = e.detail.index;
+                dashboard.style.display = index === 0 ? 'grid' : 'none';
+                console.log(index)
+            });
+
+            // Initial state
+            dashboard.style.display = 'grid';
+        });
+    </script>
 </body>
 </html>
 
