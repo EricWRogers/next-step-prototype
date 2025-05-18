@@ -7,13 +7,16 @@
   <link rel="stylesheet" href="styles.css" />
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="nav-bar/bar-script.js"></script>
+  <script language="javascript">
+      var user = "Eric";
+  </script>
 </head>
 <body>
 
     <div class="top-bar">
         <div class="user-info">
             <div class="avatar"><i data-lucide="user"></i></div>
-            <span class="greeting">Hello, Mellow!</span>
+            <span class="greeting" id="user-greeting">Hello, Mellow!</span>
         </div>
         <div class="top-icon"><i data-lucide="search"></i></div>
         <div class="top-icon"><i data-lucide="bell"></i></div> 
@@ -50,6 +53,9 @@
             // Initial state
             dashboard.style.display = 'grid';
         });
+    </script>
+    <script language="javascript">
+        document.getElementById('user-greeting').innerHTML = `Hello, ${user}`;
     </script>
 </body>
 </html>
