@@ -78,3 +78,66 @@ body {
   width: 20px;
   height: 20px;
 }
+
+/* todo screen */
+
+.todo-screen {
+  padding: 20px;
+  font-size: 14px;
+}
+
+.top-actions i {
+  background: white;
+  padding: 8px;
+  margin-left: 8px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 20px;
+  margin-bottom: 12px;
+}
+
+.challenge-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.challenge-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #fa5c5c33;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.challenge-box.selected {
+  border: 2px solid black;
+}
+
+.todo-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.todo-group strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
