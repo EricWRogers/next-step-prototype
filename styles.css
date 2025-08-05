@@ -1,3 +1,90 @@
+/* styles.css */
+
+/* ---- Variables ---- */
+:root {
+  --color-primary: #eac75b;
+  --color-primary-hover: #d9b64a;
+  --color-text: #333;
+  --color-social-bg: #555;
+  --color-divider: #ccc;
+  --font-base: 'Helvetica Neue', Arial, sans-serif;
+  --radius: 4px;
+  --padding: 0.75rem 1.5rem;
+}
+
+/* ---- Boilerplate reset ---- */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--font-base);
+  color: var(--color-text);
+  background: #fff;
+  min-height: 100vh;
+}
+
+/* ---- Reusable layout helper ---- */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---- Buttons ---- */
+.btn {
+  display: inline-block;
+  width: 100%;
+  max-width: 280px;
+  padding: var(--padding);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: #333;
+}
+.btn-primary:hover {
+  background: var(--color-primary-hover);
+}
+
+.btn-social {
+  background: var(--color-social-bg);
+  color: #fff;
+  margin-top: 0.5rem;
+}
+.btn-social:hover {
+  filter: brightness(1.1);
+}
+
+/* ---- Separator ---- */
+.separator {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 280px;
+  margin: 1.5rem 0;
+}
+.separator::before,
+.separator::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--color-divider);
+}
+.separator__text {
+  margin: 0 0.75rem;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+
+
+/*              */
+
 body {
   margin: 0;
   padding: 0;
