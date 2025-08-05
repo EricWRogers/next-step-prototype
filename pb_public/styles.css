@@ -59,6 +59,14 @@ body {
   filter: brightness(1.1);
 }
 
+.avatar img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+
 /* ---- Separator ---- */
 .separator {
   display: flex;
