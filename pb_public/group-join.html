@@ -1,87 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Join a Group</title>
-  <link rel="stylesheet" href="login-style.css" />
-  <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Join a Group</title>
+    <link rel="stylesheet" href="login-style.css" />
+    <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
 </head>
+
 <body>
-  <div class="login-page">
-    <h2>Select a Group to Join</h2>
-    <div id="group-list" class="group-list">
-      <!-- groups will be injected here -->
+    <div class="login-page">
+        <h2>Select a Group to Join</h2>
+        <div id="group-list" class="group-list">
+            <!-- groups will be injected here -->
+        </div>
     </div>
-  </div>
 
-  <script>
-  const pb = new PocketBase("http://127.0.0.1:8090");
+    <script>
+        const pb = new PocketBase("http://127.0.0.1:8090");
+        let requestSentCount = 0;
 
-  // Haversine (unchanged)
-  function getDistance(lat1, lon1, lat2, lon2) {
-    const toRad = v => (v * Math.PI) / 180;
-    const R = 6371;
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a =
-      Math.sin(dLat/2)**2 +
-      Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon/2)**2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
+        // creates (once) and shows/hides the NextStep button
+        function updateNextStepButton() {
+            let next = document.getElementById("next-step-btn");
+            if (!next) {
+                next = document.createElement("button");
+                next.id = "next-step-btn";
+                next.className = "btn btn-primary";
+                next.textContent = "NextStep";
+                next.style.margin = "2rem auto";
+                next.style.display = "none";
+                // wire up your final step:
+                next.addEventListener("click", () => {
+                    window.location.href = "index.html";
+                });
+                document.getElementById("group-list").after(next);
+            }
+            next.style.display = requestSentCount > 0 ? "block" : "none";
+        }
 
-  async function renderGroups() {
-    if (!pb.authStore.isValid) {
-      window.location.href = "login.html";
-      return;
-    }
+        function getDistance(lat1, lon1, lat2, lon2) {
+            const toRad = v => (v * Math.PI) / 180;
+            const R = 6371;
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            const a =
+                Math.sin(dLat / 2) ** 2 +
+                Math.cos(toRad(lat1)) *
+                Math.cos(toRad(lat2)) *
+                Math.sin(dLon / 2) ** 2;
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
 
-    // 1) fetch all existing requests by this user
-    const me = pb.authStore.model.id;
-    const requests = await pb.collection("group_requests")
-                             .getFullList({ filter: `user="${me}"` });
-    const requestMap = new Map(requests.map(r => [r.group, r.id]));
+        async function renderGroups() {
+            if (!pb.authStore.isValid) {
+                window.location.href = "login.html";
+                return;
+            }
 
-    // 2) get geo-location
-    navigator.geolocation.getCurrentPosition(async pos => {
-      const userLat = pos.coords.latitude;
-      const userLon = pos.coords.longitude;
+            // fetch all existing requests by this user
+            const me = pb.authStore.model.id;
+            const requests = await pb.collection("group_requests")
+                .getFullList({ filter: `user="${me}"` });
+            const requestMap = new Map(requests.map(r => [r.group, r.id]));
 
-      // 3) fetch & sort groups
-      const groups = await pb.collection("groups").getFullList();
-      groups
-        .map(g => {
-          const lon = parseFloat(g.location.lon);
-          const lat = parseFloat(g.location.lat);
-          return {
-            ...g,
-            dist: getDistance(userLat, userLon, lat, lon),
-            // mark requested & store request-id if exists
-            requested: requestMap.has(g.id),
-            requestId: requestMap.get(g.id) || null
-          };
-        })
-        .sort((a, b) => a.dist - b.dist)
-        .forEach(addGroupRow);
+            // update next set button
+            requestSentCount = requests.length;
+            updateNextStepButton();
 
-    }, () => alert("Unable to read your location."));
-  }
+            // get geo-location
+            navigator.geolocation.getCurrentPosition(async pos => {
+                const userLat = pos.coords.latitude;
+                const userLon = pos.coords.longitude;
 
-  function addGroupRow(g) {
-    const container = document.getElementById("group-list");
-    const row = document.createElement("div");
-    row.classList.add("group-item");
+                // fetch & sort groups
+                const groups = await pb.collection("groups").getFullList();
+                groups
+                    .map(g => {
+                        const lon = parseFloat(g.location.lon);
+                        const lat = parseFloat(g.location.lat);
+                        return {
+                            ...g,
+                            dist: getDistance(userLat, userLon, lat, lon),
+                            // mark requested & store request-id if exists
+                            requested: requestMap.has(g.id),
+                            requestId: requestMap.get(g.id) || null
+                        };
+                    })
+                    .sort((a, b) => a.dist - b.dist)
+                    .forEach(addGroupRow);
 
-    // build profile URL
-    const imgUrl = g.profile
-      ? pb.getFileUrl(g, g.profile)
-      : "/assets/default-avatar.png";
+            }, () => alert("Unable to read your location."));
+        }
 
-    // render card
-    row.innerHTML = `
+        function addGroupRow(g) {
+            const container = document.getElementById("group-list");
+            const row = document.createElement("div");
+            row.classList.add("group-item");
+
+
+            // build profile URL
+            const imgUrl = g.profile
+                ? pb.getFileUrl(g, g.profile)
+                : "/assets/default-avatar.png";
+
+            // render card
+            row.innerHTML = `
       <div class="group-info">
         <img src="${imgUrl}" alt="${g.name}" />
         <div class="group-text">
@@ -96,36 +122,42 @@
       </div>
     `;
 
-    // handle toggle
-    const btn = row.querySelector(".btn-request");
-    btn.addEventListener("click", async () => {
-      btn.disabled = true;
-      try {
-        if (!g.requested) {
-          // create new request
-          const rec = await pb.collection("group_requests")
-                               .create({ group: g.id, user: pb.authStore.model.id });
-          g.requested = true;
-          g.requestId = rec.id;
-          btn.textContent = "Requested ✔";
-        } else {
-          // delete existing
-          await pb.collection("group_requests").delete(g.requestId);
-          g.requested = false;
-          g.requestId = null;
-          btn.textContent = "Request Join";
+            // handle toggle
+            const btn = row.querySelector(".btn-request");
+            btn.addEventListener("click", async () => {
+                btn.disabled = true;
+                try {
+                    if (!g.requested) {
+                        // create new request
+                        const rec = await pb.collection("group_requests")
+                            .create({ group: g.id, user: pb.authStore.model.id });
+                        g.requested = true;
+                        g.requestId = rec.id;
+                        btn.textContent = "Requested ✔";
+                    } else {
+                        // delete existing
+                        await pb.collection("group_requests").delete(g.requestId);
+                        g.requested = false;
+                        g.requestId = null;
+                        btn.textContent = "Request Join";
+                    }
+
+                    const requests = await pb.collection("group_requests")
+                        .getFullList({ filter: `user="${pb.authStore.model.id}"` });
+                    requestSentCount = requests.length;
+                    updateNextStepButton();
+                } catch (e) {
+                    alert("Error: " + e.message);
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+
+            container.appendChild(row);
         }
-      } catch (e) {
-        alert("Error: " + e.message);
-      } finally {
-        btn.disabled = false;
-      }
-    });
 
-    container.appendChild(row);
-  }
-
-  document.addEventListener("DOMContentLoaded", renderGroups);
-</script>
+        document.addEventListener("DOMContentLoaded", renderGroups);
+    </script>
 </body>
+
 </html>
