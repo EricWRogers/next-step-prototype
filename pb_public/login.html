@@ -5,24 +5,91 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NextStep Login</title>
   <link rel="stylesheet" href="login-style.css">
+  <!-- PocketBase JS SDK -->
+  <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
 </head>
 <body>
   <div class="login-page">
     <img src="assets/logo.png" alt="NextStep" class="logo">
 
-    <p class="subtitle">Ready to take the NextStep?</p>
-
-    <button class="btn btn-primary">Sign In</button>
-
-    <div class="separator">
-      <span class="separator__text">Sign Up</span>
+    <!-- Sign In Form -->
+    <div id="sign-in-form" class="form">
+      <input type="email" id="signin-email" placeholder="Email" class="input-field" />
+      <input type="password" id="signin-password" placeholder="Password" class="input-field" />
+      <button id="signin-button" class="btn btn-primary">Sign In</button>
+      <p class="toggle-text">
+        Don't have an account? <span id="show-signup">Sign Up</span>
+      </p>
     </div>
 
-    <div class="social-group">
-      <button class="btn btn-social">Apple ID</button>
-      <button class="btn btn-social">Google</button>
-      <button class="btn btn-social">Facebook</button>
+    <!-- Sign Up Form -->
+    <div id="sign-up-form" class="form" style="display:none;">
+      <input type="text" id="signup-name" placeholder="Name" class="input-field" />
+      <input type="email" id="signup-email" placeholder="Email" class="input-field" />
+      <input type="password" id="signup-password" placeholder="Password" class="input-field" />
+      <input type="password" id="signup-password-confirm" placeholder="Confirm Password" class="input-field" />
+      <input type="file" id="signup-avatar" accept="image/*" class="input-field" />
+      <button id="signup-button" class="btn btn-primary">Sign Up</button>
+      <p class="toggle-text">
+        Already have an account? <span id="show-signin">Sign In</span>
+      </p>
     </div>
   </div>
+
+  <script>
+    // initialize PocketBase client (adjust URL/port if needed)
+    const pb = new PocketBase('http://127.0.0.1:8090');
+
+    // Toggle between Sign In and Sign Up
+    document.getElementById('show-signup').addEventListener('click', () => {
+      document.getElementById('sign-in-form').style.display = 'none';
+      document.getElementById('sign-up-form').style.display = 'flex';
+    });
+    document.getElementById('show-signin').addEventListener('click', () => {
+      document.getElementById('sign-up-form').style.display = 'none';
+      document.getElementById('sign-in-form').style.display = 'flex';
+    });
+
+    // Sign In handler
+    document.getElementById('signin-button').addEventListener('click', async () => {
+      const email = document.getElementById('signin-email').value.trim();
+      const password = document.getElementById('signin-password').value;
+      try {
+        const auth = await pb.collection('users').authWithPassword(email, password);
+        console.log('Signed in:', auth);
+        // TODO: redirect or load main app
+      } catch (err) {
+        alert('Sign in error: ' + err.message);
+      }
+    });
+
+    // Sign Up handler
+    document.getElementById('signup-button').addEventListener('click', async () => {
+      const name = document.getElementById('signup-name').value.trim();
+      const email = document.getElementById('signup-email').value.trim();
+      const password = document.getElementById('signup-password').value;
+      const passwordConfirm = document.getElementById('signup-password-confirm').value;
+      const avatarFile = document.getElementById('signup-avatar').files[0];
+
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('email', email);
+      formData.append('password', password);
+      formData.append('passwordConfirm', passwordConfirm);
+      if (avatarFile) {
+        formData.append('avatar', avatarFile);
+      }
+
+      try {
+        const newUser = await pb.collection('users').create(formData);
+        console.log('User created:', newUser);
+        // Optionally auto-login or prompt to sign in
+        alert('Account created! Please sign in.');
+        document.getElementById('show-signin').click();
+      } catch (err) {
+        alert('Sign up error: ' + err.message);
+      }
+    });
+  </script>
 </body>
 </html>
