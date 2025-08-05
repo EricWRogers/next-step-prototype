@@ -16,98 +16,116 @@
   </div>
 
   <script>
-    const pb = new PocketBase("http://127.0.0.1:8090");
+  const pb = new PocketBase("http://127.0.0.1:8090");
 
-    // simple Haversine formula
-    function getDistance(lat1, lon1, lat2, lon2) {
-      const toRad = v => (v * Math.PI) / 180;
-      const R = 6371; // km
-      const dLat = toRad(lat2 - lat1);
-      const dLon = toRad(lon2 - lon1);
-      const a =
-        Math.sin(dLat/2)**2 +
-        Math.cos(toRad(lat1)) *
-          Math.cos(toRad(lat2)) *
-          Math.sin(dLon/2)**2;
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
+  // Haversine (unchanged)
+  function getDistance(lat1, lon1, lat2, lon2) {
+    const toRad = v => (v * Math.PI) / 180;
+    const R = 6371;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat/2)**2 +
+      Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon/2)**2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  async function renderGroups() {
+    if (!pb.authStore.isValid) {
+      window.location.href = "login.html";
+      return;
     }
 
-    async function renderGroups() {
-      // require logged in
-      if (!pb.authStore.isValid) {
-        window.location.href = "login.html";
-        return;
-      }
+    // 1) fetch all existing requests by this user
+    const me = pb.authStore.model.id;
+    const requests = await pb.collection("group_requests")
+                             .getFullList({ filter: `user="${me}"` });
+    const requestMap = new Map(requests.map(r => [r.group, r.id]));
 
-      // get user location
-      navigator.geolocation.getCurrentPosition(async pos => {
-        const userLat = pos.coords.latitude;
-        const userLon = pos.coords.longitude;
+    // 2) get geo-location
+    navigator.geolocation.getCurrentPosition(async pos => {
+      const userLat = pos.coords.latitude;
+      const userLon = pos.coords.longitude;
 
-        // fetch _all_ groups
-        const groups = await pb.collection("groups").getFullList();
+      // 3) fetch & sort groups
+      const groups = await pb.collection("groups").getFullList();
+      groups
+        .map(g => {
+          const lon = parseFloat(g.location.lon);
+          const lat = parseFloat(g.location.lat);
+          return {
+            ...g,
+            dist: getDistance(userLat, userLon, lat, lon),
+            // mark requested & store request-id if exists
+            requested: requestMap.has(g.id),
+            requestId: requestMap.get(g.id) || null
+          };
+        })
+        .sort((a, b) => a.dist - b.dist)
+        .forEach(addGroupRow);
 
-        // attach distance and sort
-        groups
-          .map(g => {
-            // PocketBase stores location as "lon,lat"
-            const lon = parseFloat(g.location.lon);
-            const lat = parseFloat(g.location.lat);
-            return {
-              ...g,
-              dist: getDistance(userLat, userLon, lat, lon),
-            };
-          })
-          .sort((a, b) => a.dist - b.dist)
-          .forEach(g => addGroupRow(g));
-      }, err => {
-        alert("Unable to read your location.");
-      });
-    }
+    }, () => alert("Unable to read your location."));
+  }
 
-    function addGroupRow(g) {
-      const container = document.getElementById("group-list");
-      const row = document.createElement("div");
-      row.classList.add("group-item");
+  function addGroupRow(g) {
+    const container = document.getElementById("group-list");
+    const row = document.createElement("div");
+    row.classList.add("group-item");
 
-      const imgUrl = g.profile
-        ? pb.getFileUrl(g, g.profile)
-        : '/assets/default-avatar.png';
+    // build profile URL
+    const imgUrl = g.profile
+      ? pb.getFileUrl(g, g.profile)
+      : "/assets/default-avatar.png";
 
-      row.innerHTML = `
-        <div class="group-info">
-            <img src="${imgUrl}" alt="${g.name}" />
-            <div class="group-text">
-            <span class="name">${g.name}</span>
-            <span class="location">${g.city}, ${g.state}</span>
-            </div>
+    // render card
+    row.innerHTML = `
+      <div class="group-info">
+        <img src="${imgUrl}" alt="${g.name}" />
+        <div class="group-text">
+          <span class="name">${g.name}</span>
+          <span class="location">${g.city}, ${g.state}</span>
         </div>
-        <div class="group-meta">
-            <button class="btn btn-request">${g.requested ? 'Requested ✔' : 'Request Join'}</button>
-        </div>
-        `;
+      </div>
+      <div class="group-meta">
+        <button class="btn btn-request">
+          ${g.requested ? "Requested ✔" : "Request Join"}
+        </button>
+      </div>
+    `;
 
-
-      const btn = row.querySelector(".btn-request");
-      btn.addEventListener("click", async () => {
-        btn.disabled = true;
-        try {
-          await pb.collection("group_requests").create({
-            group: g.id,
-            user: pb.authStore.model.id
-          });
+    // handle toggle
+    const btn = row.querySelector(".btn-request");
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      try {
+        if (!g.requested) {
+          // create new request
+          const rec = await pb.collection("group_requests")
+                               .create({ group: g.id, user: pb.authStore.model.id });
+          g.requested = true;
+          g.requestId = rec.id;
           btn.textContent = "Requested ✔";
-        } catch (e) {
-          btn.disabled = false;
-          alert("Failed to send request.");
+        } else {
+          // delete existing
+          await pb.collection("group_requests").delete(g.requestId);
+          g.requested = false;
+          g.requestId = null;
+          btn.textContent = "Request Join";
         }
-      });
+      } catch (e) {
+        alert("Error: " + e.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
 
-      container.appendChild(row);
-    }
+    container.appendChild(row);
+  }
 
-    document.addEventListener("DOMContentLoaded", renderGroups);
-  </script>
+  document.addEventListener("DOMContentLoaded", renderGroups);
+</script>
 </body>
 </html>
