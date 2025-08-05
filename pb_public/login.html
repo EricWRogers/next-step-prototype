@@ -83,9 +83,16 @@
       try {
         const newUser = await pb.collection('users').create(formData);
         console.log('User created:', newUser);
-        // Optionally auto-login or prompt to sign in
-        alert('Account created! Please sign in.');
-        document.getElementById('show-signin').click();
+        // optionally auto-login or prompt to sign in
+        // alert('Account created! Please sign in.');
+        //document.getElementById('show-signin').click();
+
+        // create the user
++       //await pb.collection('users').create(formData);
+        // immediately sign in
+        await pb.collection('users').authWithPassword(email, password);
+        // redirect to the “join a group” page
+        window.location.href = 'group-join.html';
       } catch (err) {
         alert('Sign up error: ' + err.message);
       }
