@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NextStep</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="nav-bar/bar-script.js"></script>
+    <script language="javascript">
+      var user = "Eric";
+    </script>
+  </head>
+  <body>
+    <div class="top-bar">
+      <div class="user-info">
+        <div class="avatar"><i data-lucide="user"></i></div>
+        <span class="greeting" id="user-greeting">Hello, Mellow!</span>
+      </div>
+      <div class="top-icon"><i data-lucide="search"></i></div>
+      <div class="top-icon"><i data-lucide="bell"></i></div>
+    </div>
+
+    <div class="color-grid" id="dashboard-content">
+      <div class="top-block"></div>
+      <div class="color-box" style="background-color: #fde2cf"></div>
+      <div class="color-box" style="background-color: #e4deff"></div>
+      <div class="color-box" style="background-color: #cdf1ef"></div>
+      <div class="color-box" style="background-color: #fa5c5c"></div>
+    </div>
+
+    <div class="todo-screen" id="todo-content">
+      <div class="section-header">
+        <strong>Challenges</strong>
+        <i data-lucide="chevron-down" class="dropdown-icon"></i>
+      </div>
+
+      <div class="challenge-row">
+        <div class="challenge-box"><i data-lucide="plus"></i></div>
+        <div class="challenge-box selected"></div>
+        <div class="challenge-box selected"></div>
+        <div class="challenge-box"></div>
+        <div class="challenge-box"></div>
+      </div>
+
+      <div class="todo-section">
+        <div class="todo-group">
+          <strong>Daily</strong>
+          <div class="todo-item">
+            <span>Pray for my wife</span><input type="checkbox" />
+          </div>
+          <div class="todo-item">
+            <span>Scripture Memory</span><input type="checkbox" />
+          </div>
+        </div>
+
+        <div class="todo-group">
+          <strong>Weekly</strong>
+          <div class="todo-item">
+            <span>Serve my Church</span><input type="checkbox" />
+          </div>
+        </div>
+
+        <div class="todo-group">
+          <strong>Bucket-List</strong>
+          <div class="todo-item">
+            <span>Get a Tattoo</span><input type="checkbox" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="nav-bar-container"></div>
+
+    <script language="javascript">
+      fetch("nav-bar/bar.html")
+        .then((response) => response.text())
+        .then((html) => {
+          document.getElementById("nav-bar-container").innerHTML = html;
+          lucide.createIcons();
+          bar_init();
+
+          const dashboard = document.getElementById("dashboard-content");
+          const todo = document.getElementById("todo-content");
+
+          // Listen for nav-change event
+          window.addEventListener("nav-change", (e) => {
+            const index = e.detail.index;
+            dashboard.style.display = index === 0 ? "grid" : "none";
+            todo.style.display = index === 4 ? "grid" : "none";
+            console.log(index);
+          });
+
+          // Initial state
+          dashboard.style.display = "grid";
+          todo.style.display = "none";
+        });
+    </script>
+    <script language="javascript">
+      document.getElementById("user-greeting").innerHTML = `Hello, ${user}`;
+    </script>
+  </body>
+</html>
