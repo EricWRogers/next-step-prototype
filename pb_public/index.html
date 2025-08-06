@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="styles.css" />
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
+  <script type="module" src="https://unpkg.com/pocketbase/dist/pocketbase.es.js"></script>
+
   <script src="nav-bar/bar-script.js"></script>
   <script language="javascript">
     let currentRoomId = null;
@@ -77,6 +79,11 @@
     <div class="room-list" id="room-list"></div>
   </div>
 
+  <div id="events-content" style="display:none; max-width:600px; margin:2rem auto; padding:0 1rem;">
+    <h2 style="text-align:center; margin-bottom:1rem;">Upcoming Events</h2>
+    <div class="event-list" id="event-list"></div>
+  </div>
+
   <div id="chat-content" id="chat-content">
     <button class="back-btn" id="back-to-rooms">← Back to rooms</button>
     <div class="chat-container">
@@ -91,7 +98,7 @@
   </div>
 
   <div id="nav-bar-container"></div>
-
+  <!--nav bar-->
   <script language="javascript">
     document.getElementById("search-icon")
       .addEventListener("click", () => {
@@ -106,9 +113,10 @@
         bar_init();
 
         const dashboard = document.getElementById("dashboard-content");
-        const todo = document.getElementById("todo-content");
-        const chat = document.getElementById("chat-content");
         const chatRooms = document.getElementById("chat-room-content");
+        const chat = document.getElementById("chat-content");
+        const events = document.getElementById("events-content");
+        const todo = document.getElementById("todo-content");
 
         // Listen for nav-change event
         window.addEventListener("nav-change", (e) => {
@@ -116,16 +124,21 @@
           dashboard.style.display = index === 0 ? "grid" : "none";
           chat.style.display = (index === 1 && currentRoomId != null) ? "block" : "none";
           chatRooms.style.display = (index === 1 && currentRoomId == null) ? "block" : "none";
+          events.style.display = (index === 2) ? "block" : "none";
           todo.style.display = index === 4 ? "grid" : "none";
+
+          if (index===2) loadEvents();
         });
 
         // Initial state
         dashboard.style.display = "grid";
         chat.style.display = "none";
         chatRooms.style.display = "none";
+        events.style.display = "none";
         todo.style.display = "none";
       });
   </script>
+  <!--top bar-->
   <script language="javascript">
     (function () {
       const pb = new PocketBase("http://127.0.0.1:8090");
@@ -155,6 +168,7 @@
       }
     })();
   </script>
+  <!--rooms and chat-->
   <script language="javascript">
     (function () {
       const pb = new PocketBase("http://127.0.0.1:8090");
@@ -255,11 +269,10 @@
           currentRoomId = null;
           loadRooms();
         });
-      
+
       window.addEventListener("nav-change", (e) => {
         const index = e.detail.index;
-        if (index === 1 && currentRoomId == null)
-        {
+        if (index === 1 && currentRoomId == null) {
           document.getElementById("chat-content").style.display = "none";
           document.getElementById("chat-room-content").style.display = "block";
           document.getElementById("room-list").innerHTML = "";
@@ -341,6 +354,61 @@
       document.addEventListener("DOMContentLoaded", loadRooms);
     })();
   </script>
+  <!--events-->
+  <script>
+    (function () {
+      const pb = new PocketBase("http://127.0.0.1:8090");
+
+      async function loadEvents() {
+        if (!pb.authStore.isValid) return window.location.href = "login.html";
+        const userId = pb.authStore.model.id;
+
+        const evs = await pb.collection("events")
+          .getFullList({ sort: "time", expand: "group" });
+
+        const list = document.getElementById("event-list");
+        list.innerHTML = "";
+        evs.forEach(renderEvent);
+      }
+
+      function renderEvent(ev) {
+        const list = document.getElementById("event-list");
+        const item = document.createElement("div");
+        item.className = "event-item";
+
+        // thumbnail or fallback
+
+        const thumb = ev.override_image
+          ? pb.getFileUrl(ev, ev.override_image)
+          : pb.getFileUrl(ev.expand.group, ev.expand.group.profile);
+
+        // formatted time
+        const ts = new Date(ev.time).toLocaleString([], {
+          dateStyle: 'medium', timeStyle: 'short'
+        });
+
+        item.innerHTML = `
+    <div class="event-info">
+      <img src="${thumb}" alt="${ev.title}" />
+      <div class="event-text">
+        <div class="event-header">
+          <div class="event-title">${ev.title}</div>
+          <div class="event-time">${ts}</div>
+        </div>
+        <div class="event-desc">${ev.description || ""}</div>
+      </div>
+    </div>
+  `;
+
+        // optional click to show details later
+        list.appendChild(item);
+      }
+
+      // expose to nav-change
+      window.loadEvents = loadEvents;
+    })();
+  </script>
+
 </body>
 
 </html>

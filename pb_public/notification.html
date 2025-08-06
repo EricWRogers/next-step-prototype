@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Group Requests</title>
+    <link rel="stylesheet" href="login-style.css" />
+    <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
+    <style>
+        .request-list {
+            max-width: 600px;
+            margin: 2rem auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 0 1rem;
+        }
+
+        .request-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .request-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .request-info img {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .request-text {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .request-text .group-name {
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 0.25rem;
+        }
+
+        .request-text .user-name {
+            font-size: 0.9rem;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .request-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .btn-accept {
+            background: #4caf50;
+            color: #fff;
+            border: none;
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-decline {
+            background: #f44336;
+            color: #fff;
+            border: none;
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-accept:disabled,
+        .btn-decline:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+    <h2 style="text-align:center; margin-top:2rem;">Pending Group Requests</h2>
+    <div id="request-list" class="request-list">
+        <!-- will be populated by JS -->
+    </div>
+
+    <script>
+        (async function () {
+            const pb = new PocketBase("http://127.0.0.1:8090");
+
+            // 1) auth
+            if (!pb.authStore.isValid) {
+                location.href = "login.html";
+                return;
+            }
+            const me = pb.authStore.model.id;
+
+            // 2) load groups you administer
+            const myGroups = await pb.collection("groups").getFullList({
+                filter: `admin="${me}"`
+            });
+            const groupIds = myGroups.map(g => g.id);
+            if (!groupIds.length) {
+                document.getElementById("request-list").textContent = "You have no groups.";
+                return;
+            }
+
+            // 3) fetch requests for those groups
+            const filter = groupIds.map(id => `group="${id}"`).join("||");
+            const requests = await pb.collection("group_requests").getFullList({
+                filter,
+                expand: "group,user"
+            });
+
+            // 4) render each request
+            const list = document.getElementById("request-list");
+            for (let req of requests) addRequestRow(req);
+
+            function addRequestRow(req) {
+                const group = req.expand.group;
+                const user = req.expand.user;
+                const row = document.createElement("div");
+                row.className = "request-item";
+
+                // group thumbnail
+                const userAvatar = user.avatar
+                    ? pb.getFileUrl(user, user.avatar)
+                    : "/assets/default-room.png";
+
+                const groupAvatar = group.profile
+                    ? pb.getFileUrl(group, group.profile)
+                    : "/assets/default-room.png";
+
+                row.innerHTML = `
+        <div class="request-info">
+          <img src="${userAvatar}" alt="${user.name}" />
+          <img src="${groupAvatar}" alt="${group.name}" />
+          <div class="request-text">
+            <div class="group-name">${user.name}</div>
+          </div>
+        </div>
+        <div class="request-actions">
+          <button class="btn-accept">Accept</button>
+          <button class="btn-decline">Decline</button>
+        </div>
+      `;
+
+                const btnA = row.querySelector(".btn-accept");
+                const btnD = row.querySelector(".btn-decline");
+
+                // Accept: add user to group.members, then delete request
+                btnA.addEventListener("click", async () => {
+                    btnA.disabled = btnD.disabled = true;
+                    try {
+                        // append to members array
+                        const members = group.members || [];
+                        if (!members.includes(req.user)) {
+                            members.push(req.user);
+                            await pb.collection("groups").update(group.id, { members });
+                        }
+                        // now remove the request
+                        await pb.collection("group_requests").delete(req.id);
+                        row.remove();
+                    } catch (e) {
+                        alert("Accept failed: " + e.message);
+                        btnA.disabled = btnD.disabled = false;
+                    }
+                });
+
+                // Decline: just delete request
+                btnD.addEventListener("click", async () => {
+                    btnA.disabled = btnD.disabled = true;
+                    try {
+                        await pb.collection("group_requests").delete(req.id);
+                        row.remove();
+                    } catch (e) {
+                        alert("Decline failed: " + e.message);
+                        btnA.disabled = btnD.disabled = false;
+                    }
+                });
+
+                list.appendChild(row);
+            }
+        })();
+    </script>
+</body>
+
+</html>
