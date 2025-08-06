@@ -125,8 +125,8 @@
           // to handle clicking the chat in nav again
           if (index === 1 && chat.style.display === "block")
             currentRoomId = null;
-          
-          dashboard.style.display = index === 0 ? "grid" : "none";          
+
+          dashboard.style.display = index === 0 ? "grid" : "none";
           chat.style.display = (index === 1 && currentRoomId != null) ? "block" : "none";
           chatRooms.style.display = (index === 1 && currentRoomId == null) ? "block" : "none";
           events.style.display = (index === 2) ? "block" : "none";
@@ -337,35 +337,50 @@
         const ul = document.getElementById("message-list");
         const me = pb.authStore.model.id;
         const isMe = msg.sender === me;
+        const sender = msg.expand?.sender || {};
         const li = document.createElement("div");
         li.className = "message-item " + (isMe ? "mine" : "other");
 
-        const senderName =
-          msg.expand?.sender?.username || msg.expand?.sender?.name || msg.sender;
+        // build avatar URL (or fallback)
+        const avatarUrl = sender.avatar
+          ? pb.getFileUrl(sender, sender.avatar)
+          : "/assets/default-avatar.png";
 
-        li.innerHTML = `
-    <div class="sender">${senderName}</div>
-    <div class="text">${msg.text || ""}</div>
-    <div class="attachments"></div>
-    <div class="time">${new Date(msg.created).toLocaleTimeString()}</div>
+        // get sender name
+        const senderName =
+          sender.username || sender.name || msg.sender;
+
+        // build the message bubble HTML
+        const bubble = `
+    <div class="message-bubble">
+      <div class="sender">${senderName}</div>
+      <div class="text">${msg.text || ""}</div>
+      <div class="attachments"></div>
+      <div class="time">${new Date(msg.created).toLocaleTimeString()}</div>
+    </div>
   `;
 
-        // render attachments (images or file links)
+        // build avatar element
+        const img = `<img src="${avatarUrl}" class="avatar" alt="${senderName}" />`;
+
+        // if mine, avatar on right; if other, on left
+        li.innerHTML = isMe
+          ? `${bubble}${img}`
+          : `${img}${bubble}`;
+
+        // render any attachments
         const attDiv = li.querySelector(".attachments");
-        if (msg.attachments && msg.attachments.length) {
+        if (msg.attachments?.length) {
           msg.attachments.forEach((filename) => {
             const url = pb.getFileUrl(msg, filename);
             const ext = filename.split(".").pop().toLowerCase();
             if (["png", "jpg", "jpeg", "gif", "webp"].includes(ext)) {
-              const img = document.createElement("img");
-              img.src = url;
-              img.alt = filename;
-              attDiv.appendChild(img);
+              const im = document.createElement("img");
+              im.src = url; im.alt = filename;
+              attDiv.appendChild(im);
             } else {
               const a = document.createElement("a");
-              a.href = url;
-              a.textContent = filename;
-              a.target = "_blank";
+              a.href = url; a.textContent = filename; a.target = "_blank";
               attDiv.appendChild(a);
             }
           });
