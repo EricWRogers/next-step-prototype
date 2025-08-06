@@ -260,9 +260,32 @@ body {
   background: #fafafa;
 }
 
+/* make all messages only as wide as needed */
 .message-item {
-  margin-bottom: 1rem;
+  display: block;             /* default block */
+  max-width: 70%;             /* don’t let them span full width */
+  width: fit-content;         /* shrink-to-fit */
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  background: #f1f1f1;
+  color: #333;
+  line-height: 1.4;
 }
+
+/* your messages go to the right */
+.message-item.mine {
+  margin-left: auto;          /* push to the right */
+  background-color: #e4bf4b;  /* optional highlight */
+  color: #fff;                /* ensure contrast */
+  text-align: right;
+}
+
+/* others stay on the left */
+.message-item.other {
+  margin-right: auto; /* ensure they hug left */
+}
+
 
 .message-item .sender {
   font-weight: 600;

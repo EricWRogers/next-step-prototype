@@ -121,7 +121,12 @@
         // Listen for nav-change event
         window.addEventListener("nav-change", (e) => {
           const index = e.detail.index;
-          dashboard.style.display = index === 0 ? "grid" : "none";
+
+          // to handle clicking the chat in nav again
+          if (index === 1 && chat.style.display === "block")
+            currentRoomId = null;
+          
+          dashboard.style.display = index === 0 ? "grid" : "none";          
           chat.style.display = (index === 1 && currentRoomId != null) ? "block" : "none";
           chatRooms.style.display = (index === 1 && currentRoomId == null) ? "block" : "none";
           events.style.display = (index === 2) ? "block" : "none";
@@ -330,8 +335,10 @@
 
       function renderMessage(msg) {
         const ul = document.getElementById("message-list");
+        const me = pb.authStore.model.id;
+        const isMe = msg.sender === me;
         const li = document.createElement("div");
-        li.className = "message-item";
+        li.className = "message-item " + (isMe ? "mine" : "other");
 
         const senderName =
           msg.expand?.sender?.username || msg.expand?.sender?.name || msg.sender;
@@ -367,43 +374,43 @@
         ul.appendChild(li);
         ul.scrollTop = ul.scrollHeight;
       }
-  
-    }) ();
+
+    })();
   </script>
   <!--events-->
   <script>
-      (function () {
-        const pb = new PocketBase("http://127.0.0.1:8090");
+    (function () {
+      const pb = new PocketBase("http://127.0.0.1:8090");
 
-        async function loadEvents() {
-          if (!pb.authStore.isValid) return window.location.href = "login.html";
-          const userId = pb.authStore.model.id;
+      async function loadEvents() {
+        if (!pb.authStore.isValid) return window.location.href = "login.html";
+        const userId = pb.authStore.model.id;
 
-          const evs = await pb.collection("events")
-            .getFullList({ sort: "time", expand: "group" });
+        const evs = await pb.collection("events")
+          .getFullList({ sort: "time", expand: "group" });
 
-          const list = document.getElementById("event-list");
-          list.innerHTML = "";
-          evs.forEach(renderEvent);
-        }
+        const list = document.getElementById("event-list");
+        list.innerHTML = "";
+        evs.forEach(renderEvent);
+      }
 
-        function renderEvent(ev) {
-          const list = document.getElementById("event-list");
-          const item = document.createElement("div");
-          item.className = "event-item";
+      function renderEvent(ev) {
+        const list = document.getElementById("event-list");
+        const item = document.createElement("div");
+        item.className = "event-item";
 
-          // thumbnail or fallback
+        // thumbnail or fallback
 
-          const thumb = ev.override_image
-            ? pb.getFileUrl(ev, ev.override_image)
-            : pb.getFileUrl(ev.expand.group, ev.expand.group.profile);
+        const thumb = ev.override_image
+          ? pb.getFileUrl(ev, ev.override_image)
+          : pb.getFileUrl(ev.expand.group, ev.expand.group.profile);
 
-          // formatted time
-          const ts = new Date(ev.time).toLocaleString([], {
-            dateStyle: 'medium', timeStyle: 'short'
-          });
+        // formatted time
+        const ts = new Date(ev.time).toLocaleString([], {
+          dateStyle: 'medium', timeStyle: 'short'
+        });
 
-          item.innerHTML = `
+        item.innerHTML = `
     <div class="event-info">
       <img src="${thumb}" alt="${ev.title}" />
       <div class="event-text">
@@ -416,13 +423,13 @@
     </div>
   `;
 
-          // optional click to show details later
-          list.appendChild(item);
-        }
+        // optional click to show details later
+        list.appendChild(item);
+      }
 
-        // expose to nav-change
-        window.loadEvents = loadEvents;
-      })();
+      // expose to nav-change
+      window.loadEvents = loadEvents;
+    })();
   </script>
 
 </body>
