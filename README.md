@@ -1,7 +1,7 @@
 # next-step-prototype
 
 ## dev testing
-python -m http.server
+./test-server
 
 ## icons
 https://lucide.dev/icons/
