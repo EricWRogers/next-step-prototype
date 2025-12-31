@@ -29,11 +29,20 @@ customElements.define("ns-chat-view", class extends HTMLElement {
         <div id="message-list" class="message-list"></div>
         <form id="message-form" class="message-form">
           <input type="text" id="msg-input" placeholder="Type a message…" />
+          <label class="icon-btn file-btn" for="msg-attachments" title="Attach file">
+            <i data-lucide="paperclip"></i>
+          </label>
           <input type="file" id="msg-attachments" multiple />
-          <button type="submit">Send</button>
+          <button class="icon-btn send-btn" type="submit" title="Send">
+            <i data-lucide="send"></i>
+          </button>
         </form>
       </div>
     `;
+
+    if (window.lucide) {
+      lucide.createIcons();
+    }
   }
 
   async initChat() {

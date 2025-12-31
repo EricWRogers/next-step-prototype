@@ -5,7 +5,6 @@ customElements.define("ns-dashboard-view", class extends HTMLElement {
     if (!requireAuthOrRedirect()) return;
 
     this.render();
-    this.loadUser();
     this.bindEvents();
   }
 
@@ -22,20 +21,6 @@ customElements.define("ns-dashboard-view", class extends HTMLElement {
 
     if (window.lucide) {
       lucide.createIcons();
-    }
-  }
-
-  loadUser() {
-    const user = currentUser();
-    if (!user) return;
-
-    const greeting = this.querySelector("#greeting");
-    greeting.textContent = `Hello, ${user.name || user.email || "there"}`;
-
-    const avatarEl = this.querySelector("#avatar");
-    if (user.avatar) {
-      const url = pb.files.getURL(user, user.avatar);
-      avatarEl.innerHTML = `<img src="${url}" alt="avatar" />`;
     }
   }
 

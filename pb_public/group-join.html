@@ -18,7 +18,7 @@
     </div>
 
     <script>
-        const pb = new PocketBase("http://127.0.0.1:8090");
+        const pb = new PocketBase("window.location.origin");
         let requestSentCount = 0;
 
         // creates (once) and shows/hides the NextStep button
@@ -71,10 +71,7 @@
             updateNextStepButton();
 
             // get geo-location
-            navigator.geolocation.getCurrentPosition(async pos => {
-                const userLat = pos.coords.latitude;
-                const userLon = pos.coords.longitude;
-
+            async function renderGroupsForLocation(userLat, userLon) {
                 // fetch & sort groups
                 const groups = await pb.collection("groups").getFullList();
                 groups
@@ -91,8 +88,17 @@
                     })
                     .sort((a, b) => a.dist - b.dist)
                     .forEach(addGroupRow);
+            }
 
-            }, () => alert("Unable to read your location."));
+            navigator.geolocation.getCurrentPosition(
+                async pos => {
+                    await renderGroupsForLocation(pos.coords.latitude, pos.coords.longitude);
+                },
+                async () => {
+                    // Magnolia, AR fallback when geolocation is unavailable.
+                    await renderGroupsForLocation(33.2676, -93.2393);
+                }
+            );
         }
 
         function addGroupRow(g) {

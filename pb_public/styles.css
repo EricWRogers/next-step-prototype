@@ -200,12 +200,14 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  padding: 1rem 1rem 0;
 }
 
 .room-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
   padding: 0.75rem 1rem;
   border: 1px solid #ddd;
   border-radius: 6px;
@@ -219,6 +221,30 @@ body {
 
 .room-item .title {
   font-weight: 500;
+}
+
+.room-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  margin-left: auto;
+  min-width: 120px;
+}
+
+.room-meta .preview {
+  font-size: 0.85rem;
+  color: #666;
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+}
+
+.room-meta .time {
+  font-size: 0.75rem;
+  color: #999;
 }
 
 .enter-btn {
@@ -380,7 +406,7 @@ body {
 }
 
 .message-form input[type="file"] {
-  flex-shrink: 0;
+  display: none;
 }
 
 .message-form button {
@@ -392,12 +418,66 @@ body {
   cursor: pointer;
 }
 
+.message-form .icon-btn {
+  border: none;
+  background: #fff;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+}
+
+.message-form .icon-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.message-form .send-btn {
+  background: #e4bf4b;
+  color: #fff;
+}
+
+@media (max-width: 600px) {
+  .message-form {
+    position: sticky;
+    bottom: 84px;
+    background: #fff;
+    padding: 0.5rem;
+    border-top: 1px solid #eee;
+    border-radius: 12px;
+    box-shadow: 0 -6px 12px rgba(0, 0, 0, 0.06);
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+  }
+
+  .message-form input[type="text"] {
+    flex: 1 1 auto;
+  }
+
+  .message-form input[type="file"] {
+    display: none;
+  }
+
+  .message-form button {
+    padding: 0.45rem 0.75rem;
+  }
+
+  #message-list {
+    padding-bottom: 5rem;
+  }
+}
+
 
 /* ---- Events list styling ---- */
 .event-list {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  padding: 1rem 1rem 0;
 }
 
 .event-item {
