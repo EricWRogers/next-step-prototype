@@ -1,4 +1,14 @@
-<script src="https://unpkg.com/lucide@latest"></script>
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NextStep</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
 
 <script type="module">
   import "./components/pb-client.js";
@@ -6,10 +16,23 @@
   import "./components/app-shell.js";
   import "./components/rooms-view.js";
   import "./components/chat-view.js";
-  import {bar_init} from './nav-bar/bar-script.js';
+  import "./components/dashboard.js";
+  import { bar_init } from "./nav-bar/bar-script.js";
   // import events/todo/dashboard components too...
 
-  // keep your nav-bar fetch/init as-is for now
+  fetch("nav-bar/bar.html")
+    .then((r) => r.text())
+    .then((html) => {
+      const container = document.getElementById("nav-bar-container");
+      if (!container) return;
+      container.innerHTML = html;
+      lucide.createIcons();
+      bar_init();
+    });
+
+  window.addEventListener("dashboard-search", () => {
+    window.location.href = "group-join.html";
+  });
 </script>
 
 <body>
@@ -18,13 +41,4 @@
   <ns-app-shell></ns-app-shell>
 
   <div id="nav-bar-container"></div>
-  <script>
-    fetch("nav-bar/bar.html")
-      .then(r => r.text())
-      .then(html => {
-        document.getElementById("nav-bar-container").innerHTML = html;
-        lucide.createIcons();
-        bar_init();
-      });
-  </script>
 </body>

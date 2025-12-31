@@ -38,7 +38,7 @@
 
   <script>
     // initialize PocketBase client (adjust URL/port if needed)
-    const pb = new PocketBase('http://127.0.0.1:8090');
+    const pb = new PocketBase(window.location.origin);
 
     // Toggle between Sign In and Sign Up
     document.getElementById('show-signup').addEventListener('click', () => {
