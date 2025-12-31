@@ -143,11 +143,11 @@
 
                 // group thumbnail
                 const userAvatar = user.avatar
-                    ? pb.getFileUrl(user, user.avatar)
+                    ? pb.files.getURL(user, user.avatar)
                     : "/assets/default-room.png";
 
                 const groupAvatar = group.profile
-                    ? pb.getFileUrl(group, group.profile)
+                    ? pb.file.getURL(group, group.profile)
                     : "/assets/default-room.png";
 
                 row.innerHTML = `

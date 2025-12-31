@@ -1,4 +1,4 @@
-function bar_init()
+export function bar_init()
 {
     document.querySelectorAll('.nav-item').forEach((item, index) => {
       item.addEventListener('click', () => {
