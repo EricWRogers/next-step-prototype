@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NextStep Sign In</title>
+  <meta name="theme-color" content="#f6f2ee">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="NextStep">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="assets/pwa/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/pwa/icon-32.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="login-style.css">
+  <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
+</head>
+<body class="onboarding page">
+  <main class="flow single">
+    <section class="card signin-card">
+      <div class="card-header">
+        <h2>Sign In</h2>
+        <span class="tag">Welcome back</span>
+      </div>
+      <form id="signin-form" class="stack" autocomplete="on">
+        <label class="field">
+          <span>Email</span>
+          <input type="email" id="signin-email" name="email" placeholder="Email" required autocomplete="email" />
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <input type="password" id="signin-password" name="password" placeholder="Password" required autocomplete="current-password" />
+        </label>
+        <button type="submit" class="btn primary">Sign In</button>
+      </form>
+      <a class="btn text" href="login.html">Back</a>
+    </section>
+  </main>
+
+  <script>
+    const pb = new PocketBase(window.location.origin);
+
+    document.getElementById('signin-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const email = document.getElementById('signin-email').value.trim();
+      const password = document.getElementById('signin-password').value;
+      try {
+        await pb.collection('users').authWithPassword(email, password);
+        window.location.href = 'index.html';
+      } catch (err) {
+        alert('Sign in error: ' + err.message);
+      }
+    });
+  </script>
+</body>
+</html>

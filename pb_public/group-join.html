@@ -5,7 +5,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Join a Group</title>
+    <meta name="theme-color" content="#f6f2ee" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="NextStep" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="assets/pwa/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/pwa/icon-32.png" />
     <link rel="stylesheet" href="login-style.css" />
+    <script src="script.js" defer></script>
     <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
 </head>
 
@@ -18,7 +26,7 @@
     </div>
 
     <script>
-        const pb = new PocketBase("window.location.origin");
+        const pb = new PocketBase(window.location.origin);
         let requestSentCount = 0;
 
         // creates (once) and shows/hides the NextStep button
@@ -29,7 +37,6 @@
                 next.id = "next-step-btn";
                 next.className = "btn btn-primary";
                 next.textContent = "NextStep";
-                next.style.margin = "2rem auto";
                 next.style.display = "none";
                 // wire up your final step:
                 next.addEventListener("click", () => {
@@ -90,15 +97,21 @@
                     .forEach(addGroupRow);
             }
 
-            navigator.geolocation.getCurrentPosition(
-                async pos => {
-                    await renderGroupsForLocation(pos.coords.latitude, pos.coords.longitude);
-                },
-                async () => {
-                    // Magnolia, AR fallback when geolocation is unavailable.
-                    await renderGroupsForLocation(33.2676, -93.2393);
-                }
-            );
+            const fallbackToMagnolia = async () => {
+                // Magnolia, AR fallback when geolocation is unavailable.
+                await renderGroupsForLocation(33.2676, -93.2393);
+            };
+
+            if (!navigator.geolocation || !window.isSecureContext) {
+                await fallbackToMagnolia();
+            } else {
+                navigator.geolocation.getCurrentPosition(
+                    async pos => {
+                        await renderGroupsForLocation(pos.coords.latitude, pos.coords.longitude);
+                    },
+                    fallbackToMagnolia
+                );
+            }
         }
 
         function addGroupRow(g) {
