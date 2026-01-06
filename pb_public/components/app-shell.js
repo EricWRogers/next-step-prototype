@@ -10,6 +10,8 @@ customElements.define("ns-app-shell", class extends HTMLElement {
     const groups = this.querySelector("#groups");
     const groupsView = this.querySelector("ns-groups-view");
     const todo = this.querySelector("#todo");
+    const notifications = this.querySelector("#notifications");
+    const notificationsView = this.querySelector("ns-notification-view");
 
     const show = (el) => el.style.display = "block";
     const hide = (el) => el.style.display = "none";
@@ -17,7 +19,7 @@ customElements.define("ns-app-shell", class extends HTMLElement {
     window.addEventListener("nav-change", (e) => {
       const index = e.detail.index;
 
-      hide(dashboard); hide(rooms); hide(chat); hide(events); hide(groups); hide(todo);
+      hide(dashboard); hide(rooms); hide(chat); hide(events); hide(groups); hide(todo); hide(notifications);
 
       if (index === 0) show(dashboard);
       if (index === 1) show(rooms);         // rooms-view can decide when to open chat
@@ -27,7 +29,7 @@ customElements.define("ns-app-shell", class extends HTMLElement {
     });
 
     window.addEventListener("force-tab", (e) => {
-      hide(dashboard); hide(rooms); hide(chat); hide(events); hide(groups); hide(todo);
+      hide(dashboard); hide(rooms); hide(chat); hide(events); hide(groups); hide(todo); hide(notifications);
 
       if (e.detail?.tab === "chat") show(chat);
       if (e.detail?.tab === "rooms") show(rooms);
@@ -35,6 +37,7 @@ customElements.define("ns-app-shell", class extends HTMLElement {
       if (e.detail?.tab === "events") { show(events); eventsView?.load?.(); }
       if (e.detail?.tab === "groups") { show(groups); groupsView?.load?.(); }
       if (e.detail?.tab === "todo") show(todo);
+      if (e.detail?.tab === "notifications") { show(notifications); notificationsView?.load?.(); }
     });
 
     // initial
@@ -49,6 +52,7 @@ customElements.define("ns-app-shell", class extends HTMLElement {
       <div id="events" style="display:none;"><ns-events-view></ns-events-view></div>
       <div id="groups" style="display:none;"><ns-groups-view></ns-groups-view></div>
       <div id="todo" style="display:none;"><ns-todo-view></ns-todo-view></div>
+      <div id="notifications" style="display:none;"><ns-notification-view></ns-notification-view></div>
     `;
   }
 });

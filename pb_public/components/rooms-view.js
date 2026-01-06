@@ -15,7 +15,10 @@ customElements.define("ns-rooms-view", class extends HTMLElement {
     const userId = pb.authStore.model.id;
 
     const groups = await pb.collection("groups")
-      .getFullList({ filter: `members ~ "${userId}"` });
+      .getFullList({
+        filter: `members ~ "${userId}" || admin ~ "${userId}"`,
+        $autoCancel: false
+      });
 
     const groupIds = groups.map(g => g.id);
     if (!groupIds.length) {
@@ -24,7 +27,10 @@ customElements.define("ns-rooms-view", class extends HTMLElement {
     }
 
     const filter = groupIds.map(g => `group="${g}"`).join("||");
-    const rooms = await pb.collection("chat_rooms").getFullList({ filter });
+    const rooms = await pb.collection("chat_rooms").getFullList({
+      filter,
+      $autoCancel: false
+    });
 
     for (const r of rooms) {
       list.appendChild(await this.renderRoomCard(r));
